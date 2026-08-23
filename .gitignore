@@ -1,0 +1,32 @@
+node_modules/
+dist/
+coverage/
+.angular/
+.cache/
+.nx/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+frontend/src/environments/environment.local.ts
+
+# Runtime data
+uploads/
+backend/uploads/
+*.log
+npm-debug.log*
+
+# Editors and operating systems
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+
+# Test and build artifacts
+playwright-report/
+test-results/
+*.tsbuildinfo
+
