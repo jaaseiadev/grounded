@@ -1,5 +1,5 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import { Body, Controller, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ChatService } from './chat.service';
 import { ChatDto } from './dto/chat.dto';
 
@@ -8,18 +8,16 @@ export class ChatController {
   constructor(private readonly chat: ChatService) {}
 
   @Post()
-  async stream(
-    @Body() dto: ChatDto,
-    @Req() request: Request,
-    @Res() response: Response,
-  ) {
+  async stream(@Body() dto: ChatDto, @Res() response: Response) {
     response.status(200);
     response.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
     response.setHeader('Cache-Control', 'no-cache, no-transform');
     response.setHeader('X-Accel-Buffering', 'no');
     response.flushHeaders();
     const abortController = new AbortController();
-    request.on('close', () => abortController.abort());
+    response.on('close', () => {
+      if (!response.writableEnded) abortController.abort();
+    });
 
     try {
       for await (const event of this.chat.stream(dto, abortController.signal)) {
