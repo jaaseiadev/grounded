@@ -1,0 +1,111 @@
+<section class="min-h-screen bg-stone-50 px-5 py-8 pt-20 sm:px-8 lg:px-10 lg:pt-9">
+  <div class="mx-auto max-w-4xl">
+    <header class="mb-8">
+      <p class="mb-2 text-[10px] font-semibold tracking-[0.18em] text-lime-700 uppercase">
+        Configuration
+      </p>
+      <h1 class="text-3xl font-semibold tracking-[-0.035em] text-stone-950">Settings</h1>
+      <p class="mt-2 text-sm text-stone-500">
+        Runtime configuration exposed safely by the Grounded API.
+      </p>
+    </header>
+
+    @if (settings.loading()) {
+      <div class="space-y-4">
+        <div class="h-64 animate-pulse rounded-2xl bg-stone-200"></div>
+        <div class="h-40 animate-pulse rounded-2xl bg-stone-200"></div>
+      </div>
+    } @else if (settings.settings(); as configuration) {
+      <div class="space-y-5">
+        <article class="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+          <div class="flex items-center gap-3 border-b border-stone-200 px-6 py-5">
+            <span
+              class="flex size-9 items-center justify-center rounded-xl bg-lime-100 text-lime-800"
+              ><svg lucideBot size="18"></svg
+            ></span>
+            <div>
+              <h2 class="text-sm font-semibold text-stone-900">AI configuration</h2>
+              <p class="mt-0.5 text-[11px] text-stone-400">
+                Configured with backend environment variables
+              </p>
+            </div>
+          </div>
+          <dl class="divide-y divide-stone-100">
+            <div class="settings-row">
+              <dt>
+                <svg lucideBot size="16"></svg
+                ><span>Chat model<small>Structured response generation</small></span>
+              </dt>
+              <dd>{{ configuration.chat }}</dd>
+            </div>
+            <div class="settings-row">
+              <dt>
+                <svg lucideDatabase size="16"></svg
+                ><span>Embedding model<small>1,536-dimensional document vectors</small></span>
+              </dt>
+              <dd>{{ configuration.embedding }}</dd>
+            </div>
+            <div class="settings-row">
+              <dt>
+                <svg lucideSearch size="16"></svg
+                ><span
+                  >Default retrieval count<small>Chunks selected per chat question</small></span
+                >
+              </dt>
+              <dd>{{ configuration.defaults.retrievalCount }}</dd>
+            </div>
+            <div class="settings-row">
+              <dt>
+                <svg lucideSlidersHorizontal size="16"></svg
+                ><span
+                  >Default temperature<small>Lower values favor consistent answers</small></span
+                >
+              </dt>
+              <dd>{{ configuration.defaults.temperature }}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div class="mb-5 flex items-center gap-3">
+            <span
+              class="flex size-9 items-center justify-center rounded-xl bg-stone-100 text-stone-600"
+              ><svg lucideInfo size="18"></svg
+            ></span>
+            <div>
+              <h2 class="text-sm font-semibold text-stone-900">Application</h2>
+              <p class="mt-0.5 text-[11px] text-stone-400">Build and operating mode</p>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="info-tile">
+              <span>Name</span><strong>{{ configuration.application.name }}</strong>
+            </div>
+            <div class="info-tile">
+              <span>Version</span><strong>{{ configuration.application.version }}</strong>
+            </div>
+            <div class="info-tile">
+              <span>Mode</span
+              ><strong class="capitalize">{{ configuration.application.mode }}</strong>
+            </div>
+          </div>
+        </article>
+
+        <div class="flex items-start gap-3 rounded-2xl border border-lime-200 bg-lime-50 p-5">
+          <svg lucideLock size="18" class="mt-0.5 shrink-0 text-lime-800"></svg>
+          <div>
+            <p class="text-xs font-semibold text-lime-950">Secrets stay server-side</p>
+            <p class="mt-1 text-xs leading-5 text-lime-700">
+              API keys and the Supabase service role are never returned to this page or bundled into
+              Angular. Change models through backend environment variables and restart the API.
+            </p>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+        Settings are unavailable. Confirm that the backend is running and configured.
+      </div>
+    }
+  </div>
+</section>

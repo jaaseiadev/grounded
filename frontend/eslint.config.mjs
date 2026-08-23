@@ -6,8 +6,11 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   { ignores: ['dist/**', '.angular/**'] },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  { ...eslint.configs.recommended, files: ['**/*.ts'] },
+  ...tseslint.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: ['**/*.ts'],
+  })),
   {
     files: ['**/*.ts'],
     languageOptions: {
@@ -17,10 +20,10 @@ export default tseslint.config(
       },
     },
     plugins: { '@angular-eslint': angular },
-    processor: angular.processInlineTemplates,
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/unbound-method': 'off',
       '@angular-eslint/prefer-standalone': 'error',
     },
   },

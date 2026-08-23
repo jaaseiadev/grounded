@@ -1,0 +1,339 @@
+<section class="min-h-screen bg-stone-50 px-4 py-7 pt-20 sm:px-6 lg:px-8 lg:pt-7">
+  <div class="mx-auto max-w-[1500px]">
+    <header class="mb-7 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <div>
+        <p
+          class="mb-2 flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-lime-700 uppercase"
+        >
+          <svg lucideFlaskConical size="14"></svg> Prompt engineering lab
+        </p>
+        <h1 class="text-3xl font-semibold tracking-[-0.035em] text-stone-950">Prompt playground</h1>
+        <p class="mt-2 max-w-2xl text-sm text-stone-500">
+          Inspect retrieval, tune prompts, compare evidence, and evaluate output without touching
+          production chat settings.
+        </p>
+      </div>
+      <app-document-scope
+        [documents]="documents.readyDocuments()"
+        [selectedIds]="selectedDocumentIds()"
+        (selectedIdsChange)="selectedDocumentIds.set($event)"
+      />
+    </header>
+
+    @if (error()) {
+      <p
+        class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"
+        role="alert"
+      >
+        {{ error() }}
+      </p>
+    }
+
+    <div class="grid gap-5 xl:grid-cols-[430px_minmax(0,1fr)]">
+      <form
+        class="space-y-5 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm"
+        [formGroup]="form"
+        (ngSubmit)="run()"
+      >
+        <div>
+          <label for="preset" class="field-label">Prompt preset</label>
+          <div class="relative">
+            <select
+              id="preset"
+              class="field-control appearance-none pr-9"
+              [value]="selectedPresetId()"
+              (change)="applyPreset($any($event.target).value)"
+            >
+              @for (preset of presets(); track preset.id) {
+                <option [value]="preset.id">{{ preset.name }}</option>
+              }
+            </select>
+            <svg
+              lucideChevronDown
+              size="14"
+              class="pointer-events-none absolute top-3 right-3 text-stone-400"
+            ></svg>
+          </div>
+          @if (presets().find((preset) => preset.id === selectedPresetId()); as preset) {
+            <p class="mt-2 text-[11px] leading-4 text-stone-400">{{ preset.description }}</p>
+          }
+        </div>
+
+        <div>
+          <label for="systemPrompt" class="field-label">System prompt</label>
+          <textarea
+            id="systemPrompt"
+            rows="9"
+            class="field-control resize-y font-mono text-[11px] leading-5"
+            formControlName="systemPrompt"
+          ></textarea>
+        </div>
+
+        <div>
+          <label for="userPrompt" class="field-label">User prompt / evaluation question</label>
+          <textarea
+            id="userPrompt"
+            rows="4"
+            class="field-control resize-y"
+            placeholder="What does the policy say about damaged products?"
+            formControlName="userPrompt"
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="retrievalCount" class="field-label">Retrieved chunks</label>
+            <input
+              id="retrievalCount"
+              type="number"
+              min="1"
+              max="12"
+              class="field-control"
+              formControlName="retrievalCount"
+            />
+          </div>
+          <div>
+            <label for="temperature" class="field-label">Temperature</label>
+            <input
+              id="temperature"
+              type="number"
+              min="0"
+              max="1"
+              step="0.1"
+              class="field-control"
+              formControlName="temperature"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label for="model" class="field-label">Model</label>
+          <select id="model" class="field-control" formControlName="model">
+            @for (model of settings.settings()?.availableChatModels ?? []; track model) {
+              <option [value]="model">{{ model }}</option>
+            }
+          </select>
+          <p class="mt-1.5 text-[10px] text-stone-400">
+            Models are allow-listed by backend configuration.
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-violet-200 bg-violet-50/60 p-4">
+          <div class="mb-3 flex items-center gap-2 text-xs font-semibold text-violet-900">
+            <svg lucideBeaker size="15"></svg> Basic RAG evaluation
+          </div>
+          <label for="expectedAnswer" class="field-label !text-violet-800"
+            >Expected answer or keywords</label
+          >
+          <textarea
+            id="expectedAnswer"
+            rows="3"
+            class="field-control border-violet-200 bg-white"
+            placeholder="Optional: damaged items, 30 days, replacement"
+            formControlName="expectedAnswer"
+          ></textarea>
+          <p class="mt-2 text-[10px] leading-4 text-violet-600">
+            Grounded compares meaningful expected keywords against generated output.
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          class="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-stone-900 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+          [disabled]="form.invalid || running()"
+        >
+          @if (running()) {
+            <svg lucideLoaderCircle size="16" class="animate-spin"></svg> Running retrieval and
+            generation…
+          } @else {
+            <svg lucidePlay size="16"></svg> Run prompt
+          }
+        </button>
+      </form>
+
+      <div class="min-w-0 space-y-5">
+        @if (running()) {
+          <div class="grid gap-5 md:grid-cols-3">
+            @for (item of [1, 2, 3]; track item) {
+              <div class="h-24 animate-pulse rounded-2xl bg-stone-200"></div>
+            }
+          </div>
+          <div class="h-80 animate-pulse rounded-2xl bg-stone-200"></div>
+        } @else if (result(); as output) {
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="metric-card">
+              <svg lucideClock size="17"></svg>
+              <div>
+                <span>Latency</span><strong>{{ output.latencyMs }} ms</strong>
+              </div>
+            </div>
+            <div class="metric-card">
+              <svg lucideSearch size="17"></svg>
+              <div>
+                <span>Chunks</span><strong>{{ output.retrieved.length }}</strong>
+              </div>
+            </div>
+            <div class="metric-card">
+              <svg lucideGauge size="17"></svg>
+              <div>
+                <span>Confidence</span><strong class="capitalize">{{ output.confidence }}</strong>
+              </div>
+            </div>
+            <div class="metric-card">
+              <svg lucideSparkles size="17"></svg>
+              <div>
+                <span>Total tokens</span><strong>{{ output.usage?.totalTokens ?? 'n/a' }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <article class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-stone-900">AI response</h2>
+              <span
+                class="rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                [class.bg-lime-100]="output.grounded"
+                [class.text-lime-800]="output.grounded"
+                [class.bg-amber-100]="!output.grounded"
+                [class.text-amber-800]="!output.grounded"
+                >{{ output.grounded ? 'Grounded' : 'Insufficient evidence' }}</span
+              >
+            </div>
+            <p class="whitespace-pre-wrap text-sm leading-7 text-stone-700">{{ output.answer }}</p>
+            @if (output.citations.length > 0) {
+              <div class="mt-5 flex flex-wrap gap-2 border-t border-stone-100 pt-4">
+                @for (citation of output.citations; track citation.chunkId) {
+                  <button
+                    type="button"
+                    class="flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-[11px] text-stone-600 hover:border-lime-300 hover:bg-lime-50"
+                    (click)="activeCitation.set(citation)"
+                  >
+                    <svg lucideFileText size="13"></svg>{{ citation.documentName }}
+                    @if (citation.page) {
+                      · p. {{ citation.page }}
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </article>
+
+          @if (output.evaluation; as evaluation) {
+            <article class="rounded-2xl border border-violet-200 bg-violet-50/60 p-5">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <h2 class="flex items-center gap-2 text-sm font-semibold text-violet-950">
+                    <svg lucideCheckCircle size="16"></svg> Keyword evaluation
+                  </h2>
+                  <p class="mt-1 text-xs text-violet-600">
+                    {{ evaluation.matchedKeywords.length }} of
+                    {{ evaluation.expectedKeywords.length }} expected keywords found
+                  </p>
+                </div>
+                <strong class="text-xl text-violet-950">{{
+                  evaluation.coverage | percent: '1.0-0'
+                }}</strong>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-1.5">
+                @for (keyword of evaluation.expectedKeywords; track keyword) {
+                  <span
+                    class="rounded-full border px-2 py-1 text-[10px]"
+                    [class.border-lime-300]="evaluation.matchedKeywords.includes(keyword)"
+                    [class.bg-lime-100]="evaluation.matchedKeywords.includes(keyword)"
+                    [class.text-lime-800]="evaluation.matchedKeywords.includes(keyword)"
+                    [class.border-violet-200]="!evaluation.matchedKeywords.includes(keyword)"
+                    [class.text-violet-500]="!evaluation.matchedKeywords.includes(keyword)"
+                    >{{ keyword }}</span
+                  >
+                }
+              </div>
+            </article>
+          }
+
+          <article class="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+            <div class="border-b border-stone-200 px-5 py-4">
+              <h2 class="text-sm font-semibold text-stone-900">Retrieval inspector</h2>
+              <p class="mt-1 text-[11px] text-stone-400">Ranked by cosine similarity in pgvector</p>
+            </div>
+            <div class="divide-y divide-stone-100">
+              @for (chunk of output.retrieved; track chunk.id) {
+                <details class="group p-5">
+                  <summary class="flex cursor-pointer list-none items-center gap-4">
+                    <span
+                      class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-stone-900 text-[10px] font-semibold text-white"
+                      >{{ chunk.rank }}</span
+                    >
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-xs font-semibold text-stone-800">
+                        {{ chunk.document_name }}
+                      </p>
+                      <p class="mt-1 text-[10px] text-stone-400">
+                        Similarity {{ chunk.similarity | number: '1.3-3' }}
+                        @if (chunk.page_number) {
+                          · Page {{ chunk.page_number }}
+                        }
+                        @if (chunk.section) {
+                          · {{ chunk.section }}
+                        }
+                      </p>
+                    </div>
+                    <svg
+                      lucideChevronDown
+                      size="15"
+                      class="text-stone-400 transition group-open:rotate-180"
+                    ></svg>
+                  </summary>
+                  <p
+                    class="mt-4 whitespace-pre-wrap rounded-xl bg-stone-50 p-4 text-xs leading-6 text-stone-600"
+                  >
+                    {{ chunk.content }}
+                  </p>
+                </details>
+              }
+            </div>
+          </article>
+
+          <article class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+            <h2 class="mb-4 text-sm font-semibold text-stone-900">Final prompt components</h2>
+            <details open class="group mb-3 rounded-xl border border-stone-200">
+              <summary
+                class="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-stone-700"
+              >
+                System instructions
+              </summary>
+              <pre
+                class="max-h-64 overflow-auto border-t border-stone-100 bg-stone-50 p-4 text-[10px] leading-5 whitespace-pre-wrap text-stone-600"
+                >{{ output.finalPrompt.system }}</pre>
+            </details>
+            <details class="group rounded-xl border border-stone-200">
+              <summary
+                class="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-stone-700"
+              >
+                Delimited context + user question
+              </summary>
+              <pre
+                class="max-h-96 overflow-auto border-t border-stone-100 bg-stone-50 p-4 text-[10px] leading-5 whitespace-pre-wrap text-stone-600"
+                >{{ output.finalPrompt.contextAndUser }}</pre>
+            </details>
+          </article>
+        } @else {
+          <div
+            class="flex min-h-96 flex-col items-center justify-center rounded-2xl border border-dashed border-stone-300 bg-white px-8 text-center"
+          >
+            <span
+              class="mb-4 flex size-12 items-center justify-center rounded-2xl bg-lime-100 text-lime-800"
+              ><svg lucideFlaskConical size="22"></svg
+            ></span>
+            <h2 class="text-sm font-semibold text-stone-800">Ready to inspect the pipeline</h2>
+            <p class="mt-2 max-w-sm text-xs leading-5 text-stone-400">
+              Choose a preset, enter a question, and run the prompt to see retrieval scores,
+              constructed context, citations, latency, and evaluation metrics.
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-citation-panel [citation]="activeCitation()" (closed)="activeCitation.set(null)" />

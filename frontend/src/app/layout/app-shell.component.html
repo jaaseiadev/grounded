@@ -1,0 +1,130 @@
+<div class="min-h-screen bg-stone-50 text-stone-900">
+  <button
+    type="button"
+    class="fixed top-4 left-4 z-40 flex size-10 items-center justify-center rounded-xl border border-stone-200 bg-white shadow-sm lg:hidden"
+    aria-label="Open navigation"
+    (click)="mobileOpen.set(true)"
+  >
+    <svg lucideMenu size="20"></svg>
+  </button>
+
+  @if (mobileOpen()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-40 bg-stone-950/30 backdrop-blur-[2px] lg:hidden"
+      aria-label="Close navigation"
+      (click)="closeMobile()"
+    ></button>
+  }
+
+  <aside
+    class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-stone-200 bg-stone-950 px-4 py-5 text-stone-200 transition-transform duration-200 lg:translate-x-0"
+    [class.-translate-x-full]="!mobileOpen()"
+  >
+    <div class="mb-7 flex items-center justify-between px-2">
+      <a routerLink="/chat" class="flex items-center gap-3" (click)="closeMobile()">
+        <span class="flex size-9 items-center justify-center rounded-xl bg-lime-300 text-stone-950">
+          <svg lucideLeaf size="19" strokeWidth="2.4"></svg>
+        </span>
+        <span>
+          <span class="block text-[15px] font-semibold tracking-tight text-white">Grounded</span>
+          <span class="block text-[10px] font-medium tracking-[0.16em] text-stone-500 uppercase"
+            >Document intelligence</span
+          >
+        </span>
+      </a>
+      <button
+        type="button"
+        class="flex size-8 items-center justify-center rounded-lg text-stone-400 hover:bg-white/10 hover:text-white lg:hidden"
+        aria-label="Close navigation"
+        (click)="closeMobile()"
+      >
+        <svg lucideX size="18"></svg>
+      </button>
+    </div>
+
+    <button
+      type="button"
+      class="mb-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-lime-300 text-sm font-semibold text-stone-950 transition hover:bg-lime-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-300"
+      (click)="newChat()"
+    >
+      <svg lucidePlus size="17"></svg>
+      New chat
+    </button>
+
+    <nav class="space-y-1" aria-label="Primary navigation">
+      <a
+        routerLink="/chat"
+        routerLinkActive="bg-white/10 text-white"
+        class="nav-link"
+        (click)="closeMobile()"
+      >
+        <svg lucideMessageSquare size="17"></svg>
+        Chats
+      </a>
+      <a
+        routerLink="/documents"
+        routerLinkActive="bg-white/10 text-white"
+        class="nav-link"
+        (click)="closeMobile()"
+      >
+        <svg lucideFileText size="17"></svg>
+        Documents
+      </a>
+      <a
+        routerLink="/playground"
+        routerLinkActive="bg-white/10 text-white"
+        class="nav-link"
+        (click)="closeMobile()"
+      >
+        <svg lucideSlidersHorizontal size="17"></svg>
+        Prompt playground
+      </a>
+      <a
+        routerLink="/settings"
+        routerLinkActive="bg-white/10 text-white"
+        class="nav-link"
+        (click)="closeMobile()"
+      >
+        <svg lucideSettings size="17"></svg>
+        Settings
+      </a>
+    </nav>
+
+    <div class="mt-7 min-h-0 flex-1 overflow-y-auto border-t border-white/10 pt-5">
+      <p class="mb-3 px-2 text-[10px] font-semibold tracking-[0.16em] text-stone-500 uppercase">
+        Recent chats
+      </p>
+      <div class="space-y-1">
+        @for (conversation of conversations.conversations().slice(0, 10); track conversation.id) {
+          <a
+            [routerLink]="['/chat', conversation.id]"
+            routerLinkActive="bg-white/10 text-white"
+            class="block truncate rounded-lg px-3 py-2 text-xs text-stone-400 transition hover:bg-white/5 hover:text-stone-200"
+            (click)="closeMobile()"
+          >
+            {{ conversation.title }}
+          </a>
+        } @empty {
+          <p class="px-3 py-2 text-xs leading-5 text-stone-600">
+            Your conversations will appear here.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
+      <div class="mb-1.5 flex items-center gap-2 text-xs font-medium text-stone-300">
+        <span class="size-1.5 rounded-full bg-lime-300"></span>
+        Single-user workspace
+      </div>
+      <p class="text-[11px] leading-4 text-stone-500">
+        Private data flows through your backend only.
+      </p>
+    </div>
+  </aside>
+
+  <main class="min-h-screen lg:pl-72">
+    <router-outlet></router-outlet>
+  </main>
+</div>

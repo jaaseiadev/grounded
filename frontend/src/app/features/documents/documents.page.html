@@ -1,0 +1,223 @@
+<section class="min-h-screen bg-stone-50 px-5 py-8 pt-20 sm:px-8 lg:px-10 lg:pt-9">
+  <div class="mx-auto max-w-6xl">
+    <header class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="mb-2 text-[10px] font-semibold tracking-[0.18em] text-lime-700 uppercase">
+          Knowledge base
+        </p>
+        <h1 class="text-3xl font-semibold tracking-[-0.035em] text-stone-950">Documents</h1>
+        <p class="mt-2 text-sm text-stone-500">
+          Upload, process, and inspect the sources used by Grounded.
+        </p>
+      </div>
+      <p class="text-xs text-stone-400">PDF, DOCX, TXT, or MD · 15 MB maximum</p>
+    </header>
+
+    <label
+      class="mb-8 flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white px-6 text-center transition"
+      [class.border-lime-500]="dragging()"
+      [class.bg-lime-50]="dragging()"
+      [class.border-stone-300]="!dragging()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="dragging.set(false)"
+      (drop)="onDrop($event)"
+    >
+      <input
+        type="file"
+        class="sr-only"
+        accept=".pdf,.docx,.txt,.md"
+        multiple
+        (change)="onFilePicker($event)"
+      />
+      @if (uploading()) {
+        <svg lucideLoaderCircle size="28" class="mb-4 animate-spin text-lime-700"></svg>
+        <p class="text-sm font-semibold text-stone-800">Uploading document…</p>
+        <div class="mt-4 h-1.5 w-48 overflow-hidden rounded-full bg-stone-100">
+          <div
+            class="h-full rounded-full bg-lime-500 transition-all"
+            [style.width.%]="documents.uploadProgress()"
+          ></div>
+        </div>
+      } @else {
+        <span
+          class="mb-4 flex size-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-700"
+          ><svg lucideUploadCloud size="23"></svg
+        ></span>
+        <p class="text-sm font-semibold text-stone-800">Drop documents here or browse</p>
+        <p class="mt-1 text-xs text-stone-400">Text is extracted and embedded automatically.</p>
+      }
+    </label>
+
+    @if (actionError() || documents.error()) {
+      <div
+        class="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-700"
+        role="alert"
+      >
+        <svg lucideAlertCircle size="17" class="shrink-0"></svg>
+        {{ actionError() ?? documents.error() }}
+      </div>
+    }
+
+    <div class="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+        <h2 class="text-sm font-semibold text-stone-900">Document library</h2>
+        <span class="rounded-full bg-stone-100 px-2.5 py-1 text-[10px] font-semibold text-stone-500"
+          >{{ documents.documents().length }} files</span
+        >
+      </div>
+
+      @if (documents.loading()) {
+        <div class="space-y-1 p-4">
+          @for (item of [1, 2, 3]; track item) {
+            <div class="h-17 animate-pulse rounded-xl bg-stone-100"></div>
+          }
+        </div>
+      } @else if (documents.documents().length === 0) {
+        <div class="flex flex-col items-center px-6 py-16 text-center">
+          <span
+            class="mb-4 flex size-11 items-center justify-center rounded-xl bg-stone-100 text-stone-400"
+            ><svg lucideFileText size="20"></svg
+          ></span>
+          <p class="text-sm font-semibold text-stone-700">No documents yet</p>
+          <p class="mt-1 text-xs text-stone-400">
+            Upload one of the sample policies or your own file to begin.
+          </p>
+        </div>
+      } @else {
+        <div class="divide-y divide-stone-100">
+          @for (document of documents.documents(); track document.id) {
+            <article
+              class="grid gap-4 px-5 py-4 transition hover:bg-stone-50/70 sm:grid-cols-[minmax(0,1fr)_8rem_9rem_auto] sm:items-center"
+            >
+              <div class="flex min-w-0 items-center gap-3">
+                <span
+                  class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-[10px] font-bold text-stone-500"
+                  >{{ fileExtension(document.name) }}</span
+                >
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium text-stone-800">{{ document.name }}</p>
+                  <p class="mt-1 text-[11px] text-stone-400">
+                    {{ document.file_size / 1024 / 1024 | number: '1.1-1' }} MB ·
+                    {{ document.created_at | date: 'MMM d, y' }}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <span
+                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize"
+                  [class.bg-lime-100]="document.status === 'ready'"
+                  [class.text-lime-800]="document.status === 'ready'"
+                  [class.bg-amber-100]="
+                    document.status === 'processing' || document.status === 'uploading'
+                  "
+                  [class.text-amber-800]="
+                    document.status === 'processing' || document.status === 'uploading'
+                  "
+                  [class.bg-red-100]="document.status === 'failed'"
+                  [class.text-red-700]="document.status === 'failed'"
+                >
+                  @if (document.status === 'ready') {
+                    <svg lucideCheckCircle size="12"></svg>
+                  }
+                  @if (document.status === 'processing' || document.status === 'uploading') {
+                    <svg lucideLoaderCircle size="12" class="animate-spin"></svg>
+                  }
+                  @if (document.status === 'failed') {
+                    <svg lucideAlertCircle size="12"></svg>
+                  }
+                  {{ document.status }}
+                </span>
+              </div>
+              <div class="text-xs text-stone-500">{{ document.chunk_count }} chunks</div>
+              <div class="flex items-center gap-1 sm:justify-end">
+                <button
+                  type="button"
+                  class="icon-button"
+                  aria-label="View extracted chunks"
+                  [disabled]="document.chunk_count === 0"
+                  (click)="view(document)"
+                >
+                  <svg lucideEye size="16"></svg>
+                </button>
+                <button
+                  type="button"
+                  class="icon-button"
+                  aria-label="Reprocess document"
+                  [disabled]="document.status === 'processing'"
+                  (click)="reprocess(document)"
+                >
+                  <svg lucideRefreshCw size="15"></svg>
+                </button>
+                <button
+                  type="button"
+                  class="icon-button hover:!bg-red-50 hover:!text-red-700"
+                  aria-label="Delete document"
+                  (click)="remove(document)"
+                >
+                  <svg lucideTrash2 size="15"></svg>
+                </button>
+              </div>
+              @if (document.error_message) {
+                <p class="text-xs text-red-600 sm:col-span-4">{{ document.error_message }}</p>
+              }
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+@if (preview() || previewLoading()) {
+  <button
+    type="button"
+    class="fixed inset-0 z-40 bg-stone-950/20 backdrop-blur-[1px]"
+    aria-label="Close document preview"
+    (click)="preview.set(null)"
+  ></button>
+  <aside
+    class="fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col border-l border-stone-200 bg-white shadow-2xl"
+    aria-label="Document chunks"
+  >
+    <header class="flex items-center justify-between border-b border-stone-200 p-5">
+      <div class="min-w-0">
+        <p class="truncate text-sm font-semibold text-stone-900">
+          {{ preview()?.name ?? 'Loading document…' }}
+        </p>
+        <p class="mt-1 text-xs text-stone-400">Extracted chunks used for vector search</p>
+      </div>
+      <button
+        type="button"
+        class="icon-button"
+        aria-label="Close document preview"
+        (click)="preview.set(null)"
+      >
+        <svg lucideX size="18"></svg>
+      </button>
+    </header>
+    <div class="flex-1 space-y-4 overflow-y-auto bg-stone-50 p-5">
+      @if (previewLoading()) {
+        <div class="h-40 animate-pulse rounded-xl bg-stone-200"></div>
+      } @else {
+        @for (chunk of preview()?.chunks ?? []; track chunk.id) {
+          <article class="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div
+              class="mb-3 flex items-center justify-between text-[10px] font-semibold tracking-wide text-stone-400 uppercase"
+            >
+              <span>Chunk {{ chunk.chunk_index + 1 }}</span>
+              <span>
+                @if (chunk.page_number) {
+                  Page {{ chunk.page_number }}
+                }
+                @if (chunk.section) {
+                  · {{ chunk.section }}
+                }
+              </span>
+            </div>
+            <p class="whitespace-pre-wrap text-xs leading-6 text-stone-600">{{ chunk.content }}</p>
+          </article>
+        }
+      }
+    </div>
+  </aside>
+}
