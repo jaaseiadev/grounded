@@ -28,6 +28,26 @@ export function parseStructuredAiResponse(raw: string): StructuredAiResponse {
   );
 }
 
+export function recoverStructuredAiResponse(
+  raw: string,
+): StructuredAiResponse | null {
+  try {
+    return parseStructuredAiResponse(raw);
+  } catch {
+    const partialAnswer = extractPartialAnswer(raw).trim();
+    const plainAnswer = extractPlainTextAnswer(raw);
+    const answer = partialAnswer || plainAnswer;
+    if (!answer) return null;
+
+    return {
+      answer,
+      citationChunkIds: [],
+      grounded: false,
+      confidence: 'low',
+    };
+  }
+}
+
 function unwrapJsonCodeFence(raw: string): string {
   const trimmed = raw.trim().replace(/^\uFEFF/, '');
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
@@ -294,6 +314,14 @@ function firstDefined(value: Record<string, unknown>, keys: string[]): unknown {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function extractPlainTextAnswer(raw: string): string {
+  const unfenced = unwrapJsonCodeFence(raw);
+  if (!unfenced || unfenced.startsWith('{') || unfenced.startsWith('[')) {
+    return '';
+  }
+  return unfenced.trim();
 }
 
 function escapeJsonStringWhitespace(raw: string): string {

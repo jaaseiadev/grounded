@@ -4,7 +4,7 @@ import type { AiProvider, AiUsage } from '../ai/ai-provider.interface';
 import { PromptBuilderService } from '../ai/prompt-builder.service';
 import {
   extractPartialAnswer,
-  parseStructuredAiResponse,
+  recoverStructuredAiResponse,
 } from '../ai/structured-response';
 import { Citation, RetrievalResult } from '../common/types/domain.types';
 import { ConversationsService } from '../conversations/conversations.service';
@@ -96,31 +96,6 @@ export class ChatService {
           yield { type: 'delta', content };
         }
       }
-      const structured = parseStructuredAiResponse(rawJson);
-      const citations = this.validateCitations(
-        structured.citationChunkIds,
-        chunks,
-      );
-      const finalAnswer = structured.answer;
-      if (finalAnswer.length > streamedAnswer.length) {
-        yield {
-          type: 'delta',
-          content: finalAnswer.slice(streamedAnswer.length),
-        };
-      }
-      await this.conversations.addMessage(
-        conversationId,
-        'assistant',
-        finalAnswer,
-        citations,
-      );
-      yield {
-        type: 'complete',
-        citations,
-        grounded: structured.grounded && citations.length > 0,
-        confidence: structured.confidence,
-        usage,
-      };
     } catch (error) {
       if (signal.aborted) {
         if (streamedAnswer) {
@@ -134,10 +109,42 @@ export class ChatService {
       }
       throw new BadGatewayException(
         error instanceof Error
-          ? `AI response failed validation: ${error.message}`
-          : 'AI response failed.',
+          ? `AI provider request failed: ${error.message}`
+          : 'AI provider request failed.',
       );
     }
+
+    const structured = recoverStructuredAiResponse(rawJson) ?? {
+      answer:
+        'The AI provider returned an empty response. Please try your question again.',
+      citationChunkIds: [],
+      grounded: false,
+      confidence: 'low' as const,
+    };
+    const citations = this.validateCitations(
+      structured.citationChunkIds,
+      chunks,
+    );
+    const finalAnswer = structured.answer;
+    if (finalAnswer.length > streamedAnswer.length) {
+      yield {
+        type: 'delta',
+        content: finalAnswer.slice(streamedAnswer.length),
+      };
+    }
+    await this.conversations.addMessage(
+      conversationId,
+      'assistant',
+      finalAnswer,
+      citations,
+    );
+    yield {
+      type: 'complete',
+      citations,
+      grounded: structured.grounded && citations.length > 0,
+      confidence: structured.confidence,
+      usage,
+    };
   }
 
   validateCitations(

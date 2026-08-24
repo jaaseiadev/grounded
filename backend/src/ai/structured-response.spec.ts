@@ -1,6 +1,7 @@
 import {
   extractPartialAnswer,
   parseStructuredAiResponse,
+  recoverStructuredAiResponse,
 } from './structured-response';
 
 describe('structured AI response', () => {
@@ -159,5 +160,32 @@ End of result.`);
     expect(extractPartialAnswer('{"answer":"Line one\\nLine two')).toBe(
       'Line one\nLine two',
     );
+  });
+
+  it('recovers an answer from truncated JSON conservatively', () => {
+    expect(
+      recoverStructuredAiResponse(
+        '{"answer":"A usable partial answer","citationChunkIds": [',
+      ),
+    ).toEqual({
+      answer: 'A usable partial answer',
+      citationChunkIds: [],
+      grounded: false,
+      confidence: 'low',
+    });
+  });
+
+  it('recovers plain text conservatively when structured output is ignored', () => {
+    expect(recoverStructuredAiResponse('A plain provider answer.')).toEqual({
+      answer: 'A plain provider answer.',
+      citationChunkIds: [],
+      grounded: false,
+      confidence: 'low',
+    });
+  });
+
+  it('does not invent an answer for empty or metadata-only output', () => {
+    expect(recoverStructuredAiResponse('')).toBeNull();
+    expect(recoverStructuredAiResponse('{"confidence":"high"}')).toBeNull();
   });
 });

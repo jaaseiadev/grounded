@@ -3,7 +3,7 @@ import { AI_PROVIDER } from '../ai/ai-provider.interface';
 import type { AiProvider, AiUsage } from '../ai/ai-provider.interface';
 import { PromptBuilderService } from '../ai/prompt-builder.service';
 import { PROMPT_PRESETS } from '../ai/prompts';
-import { parseStructuredAiResponse } from '../ai/structured-response';
+import { recoverStructuredAiResponse } from '../ai/structured-response';
 import { ChatService } from '../chat/chat.service';
 import { RetrievalService } from '../retrieval/retrieval.service';
 import { RunPlaygroundDto } from './dto/run-playground.dto';
@@ -63,7 +63,13 @@ export class PlaygroundService {
         raw += part.rawJson;
         usage = part.usage ?? usage;
       }
-      const structured = parseStructuredAiResponse(raw);
+      const structured = recoverStructuredAiResponse(raw) ?? {
+        answer:
+          'The AI provider returned an empty response. Please try your prompt again.',
+        citationChunkIds: [],
+        grounded: false,
+        confidence: 'low' as const,
+      };
       const citations = this.chat.validateCitations(
         structured.citationChunkIds,
         retrieved,
