@@ -12,7 +12,10 @@ import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env', '../.env'] }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env', '../.env.local', '../.env'],
+    }),
     DatabaseModule,
     AiModule,
     DocumentsModule,
