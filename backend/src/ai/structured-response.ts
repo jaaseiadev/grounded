@@ -9,7 +9,13 @@ export const structuredAiResponseSchema = z.object({
 });
 
 export function parseStructuredAiResponse(raw: string): StructuredAiResponse {
-  return structuredAiResponseSchema.parse(JSON.parse(raw));
+  return structuredAiResponseSchema.parse(JSON.parse(unwrapJsonCodeFence(raw)));
+}
+
+function unwrapJsonCodeFence(raw: string): string {
+  const trimmed = raw.trim().replace(/^\uFEFF/, '');
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return (fenced?.[1] ?? trimmed).trim();
 }
 
 export function extractPartialAnswer(rawJson: string): string {
