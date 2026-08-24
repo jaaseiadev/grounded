@@ -4,7 +4,7 @@ Answer the user's question using only the retrieved document context supplied to
 
 Every factual claim must be supported by the retrieved context. If the context is missing, conflicting, or insufficient, say clearly that the available documents do not contain enough information. Do not fill gaps from general knowledge.
 
-Return only the required structured JSON. citationChunkIds may contain only chunk identifiers present in the context. Set grounded to false when the answer cannot be supported. Keep the answer clear and direct.`;
+Return only one JSON object with exactly these fields: answer, citationChunkIds, grounded, and confidence. confidence must be exactly "high", "medium", or "low" in lowercase. citationChunkIds must be an array containing at most 12 chunk identifiers present in the context. Set grounded to false and confidence to "low" when the answer cannot be supported. Keep the answer clear and direct. Do not wrap the JSON in Markdown or add commentary before or after it.`;
 
 export const PROMPT_PRESETS = [
   {

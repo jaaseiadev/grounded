@@ -116,15 +116,30 @@ export class OpenRouterProvider implements AiProvider {
                 type: 'object',
                 additionalProperties: false,
                 properties: {
-                  answer: { type: 'string' },
+                  answer: {
+                    type: 'string',
+                    minLength: 1,
+                    description:
+                      'A clear answer based only on the retrieved context.',
+                  },
                   citationChunkIds: {
                     type: 'array',
                     items: { type: 'string' },
+                    maxItems: 12,
+                    uniqueItems: true,
+                    description:
+                      'Only chunk identifiers present in the retrieved context.',
                   },
-                  grounded: { type: 'boolean' },
+                  grounded: {
+                    type: 'boolean',
+                    description:
+                      'True only when retrieved citations support the answer.',
+                  },
                   confidence: {
                     type: 'string',
                     enum: ['high', 'medium', 'low'],
+                    description:
+                      'Use exactly one lowercase enum value; use low when uncertain.',
                   },
                 },
                 required: [
