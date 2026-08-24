@@ -105,6 +105,18 @@ describe('OpenRouterProvider', () => {
         model?: string;
         reasoning?: { effort?: string | null };
         stream?: boolean;
+        responseFormat?: {
+          type?: string;
+          jsonSchema?: {
+            strict?: boolean;
+            schema?: {
+              properties?: {
+                citationChunkIds?: { maxItems?: number };
+                confidence?: { enum?: string[] };
+              };
+            };
+          };
+        };
       };
     };
     let chatRequest: ChatSendRequest | undefined;
@@ -134,6 +146,18 @@ describe('OpenRouterProvider', () => {
       model: 'stealth/ox-alpha',
       reasoning: { effort: 'high' },
       stream: true,
+      responseFormat: {
+        type: 'json_schema',
+        jsonSchema: {
+          strict: true,
+          schema: {
+            properties: {
+              citationChunkIds: { maxItems: 12 },
+              confidence: { enum: ['high', 'medium', 'low'] },
+            },
+          },
+        },
+      },
     });
     expect(chatRequestOptions).toEqual({ signal: undefined });
     expect(chunks).toEqual([
