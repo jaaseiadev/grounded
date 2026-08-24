@@ -34,6 +34,26 @@ describe('structured AI response', () => {
     ).toEqual(expect.objectContaining({ answer: 'Supported answer' }));
   });
 
+  it('escapes literal whitespace control characters inside JSON strings', () => {
+    const response = parseStructuredAiResponse(`{
+      "answer": "Line one
+Line\ttwo",
+      "citationChunkIds": ["chunk-1"],
+      "grounded": true,
+      "confidence": "medium"
+    }`);
+
+    expect(response.answer).toBe('Line one\nLine\ttwo');
+  });
+
+  it('does not repair unsupported control characters', () => {
+    expect(() =>
+      parseStructuredAiResponse(
+        '{"answer":"unsafe\u0000value","citationChunkIds":[],"grounded":false,"confidence":"low"}',
+      ),
+    ).toThrow();
+  });
+
   it('rejects JSON surrounded by arbitrary prose', () => {
     expect(() =>
       parseStructuredAiResponse(

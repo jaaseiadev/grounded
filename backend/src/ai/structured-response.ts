@@ -9,13 +9,54 @@ export const structuredAiResponseSchema = z.object({
 });
 
 export function parseStructuredAiResponse(raw: string): StructuredAiResponse {
-  return structuredAiResponseSchema.parse(JSON.parse(unwrapJsonCodeFence(raw)));
+  const unfenced = unwrapJsonCodeFence(raw);
+  return structuredAiResponseSchema.parse(
+    JSON.parse(escapeJsonStringWhitespace(unfenced)),
+  );
 }
 
 function unwrapJsonCodeFence(raw: string): string {
   const trimmed = raw.trim().replace(/^\uFEFF/, '');
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
   return (fenced?.[1] ?? trimmed).trim();
+}
+
+function escapeJsonStringWhitespace(raw: string): string {
+  const replacements: Record<string, string> = {
+    '\b': '\\b',
+    '\t': '\\t',
+    '\n': '\\n',
+    '\f': '\\f',
+    '\r': '\\r',
+  };
+  let result = '';
+  let inString = false;
+  let escaped = false;
+
+  for (const character of raw) {
+    if (!inString) {
+      result += character;
+      if (character === '"') inString = true;
+      continue;
+    }
+
+    const replacement = replacements[character];
+    if (replacement) {
+      result += escaped ? replacement.slice(1) : replacement;
+      escaped = false;
+      continue;
+    }
+    result += character;
+    if (escaped) {
+      escaped = false;
+    } else if (character === '\\') {
+      escaped = true;
+    } else if (character === '"') {
+      inString = false;
+    }
+  }
+
+  return result;
 }
 
 export function extractPartialAnswer(rawJson: string): string {
