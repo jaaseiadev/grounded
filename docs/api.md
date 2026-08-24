@@ -37,7 +37,7 @@ An empty `documentIds` array means all ready documents. The response content typ
 - `conversation`: new conversation ID and fallback title
 - `retrieval`: retrieved chunk count
 - `delta`: progressive answer text
-- `complete`: trusted citations, grounding, confidence, and token usage when supplied by OpenAI
+- `complete`: trusted citations, grounding, confidence, and OpenRouter token usage, including reasoning-token counts when supplied
 - `error`: stream-safe error message
 
 Closing the request cancels upstream generation.

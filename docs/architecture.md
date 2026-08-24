@@ -8,7 +8,7 @@ flowchart LR
   A -->|/api| N[NestJS API]
   N -->|private files| S[Supabase Storage]
   N -->|records + vector RPC| P[(PostgreSQL + pgvector)]
-  N -->|embeddings + structured chat| O[OpenAI API]
+  N -->|embeddings + reasoning chat| O[OpenRouter API]
 ```
 
 ## Frontend boundaries
@@ -25,7 +25,7 @@ Angular Signals represent synchronous view state. RxJS represents finite HTTP wo
 
 - `documents` validates uploads, stores originals, extracts text, chunks content, requests embeddings, and persists vectors.
 - `retrieval` embeds a question and invokes the scoped pgvector similarity function.
-- `ai` defines the provider boundary, central prompt, structured schema, partial JSON stream extraction, and OpenAI implementation.
+- `ai` defines the provider boundary, central prompt, structured schema, partial JSON stream extraction, and OpenRouter implementation.
 - `chat` coordinates retrieval, persistence, generation, cancellation, and citation validation.
 - `conversations` owns conversation and message records.
 - `playground` exposes prompt experimentation, retrieval diagnostics, metrics, and basic keyword evaluation.
@@ -33,7 +33,7 @@ Angular Signals represent synchronous view state. RxJS represents finite HTTP wo
 
 ## Trust boundaries
 
-The Angular bundle contains no OpenAI or Supabase service credentials. The Supabase tables, RPC, and private Storage bucket are inaccessible to `anon` and `authenticated` browser roles. Only the backend service role accesses them. Uploaded text is untrusted data and is delimited from both system and user instructions before model generation.
+The Angular bundle contains no OpenRouter or Supabase service credentials. The Supabase tables, RPC, and private Storage bucket are inaccessible to `anon` and `authenticated` browser roles. Only the backend service role accesses them. Uploaded text is untrusted data and is delimited from both system and user instructions before model generation.
 
 ## Operating mode
 

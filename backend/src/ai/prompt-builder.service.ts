@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { RetrievalResult } from '../common/types/domain.types';
+import { AiMessage } from './ai-provider.interface';
 import { DEFAULT_SYSTEM_PROMPT } from './prompts';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class PromptBuilderService {
     question: string,
     chunks: RetrievalResult[],
     systemPrompt = DEFAULT_SYSTEM_PROMPT,
-  ): ChatCompletionMessageParam[] {
+  ): AiMessage[] {
     const context = chunks
       .map(
         (chunk) =>
@@ -26,7 +26,7 @@ export class PromptBuilderService {
     ];
   }
 
-  formatForInspector(messages: ChatCompletionMessageParam[]): {
+  formatForInspector(messages: AiMessage[]): {
     system: string;
     contextAndUser: string;
   } {

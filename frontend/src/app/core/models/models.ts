@@ -89,7 +89,7 @@ export interface PlaygroundResult extends AIResponse {
   retrieved: RetrievalResult[];
   finalPrompt: { system: string; contextAndUser: string };
   latencyMs: number;
-  usage: { promptTokens: number; completionTokens: number; totalTokens: number } | null;
+  usage: AIUsage | null;
   evaluation: {
     expectedKeywords: string[];
     matchedKeywords: string[];
@@ -98,11 +98,20 @@ export interface PlaygroundResult extends AIResponse {
 }
 
 export interface Settings {
+  provider: string;
   chat: string;
   embedding: string;
+  reasoningEffort: string;
   availableChatModels: string[];
   defaults: { retrievalCount: number; temperature: number };
   application: { name: string; version: string; mode: string };
+}
+
+export interface AIUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  reasoningTokens?: number;
 }
 
 export type ChatStreamEvent =
@@ -114,6 +123,6 @@ export type ChatStreamEvent =
       citations: Citation[];
       grounded: boolean;
       confidence: 'high' | 'medium' | 'low';
-      usage?: { promptTokens: number; completionTokens: number; totalTokens: number };
+      usage?: AIUsage;
     }
   | { type: 'error'; message: string };

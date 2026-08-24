@@ -1,6 +1,6 @@
 import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
 import { AI_PROVIDER } from '../ai/ai-provider.interface';
-import type { AiProvider } from '../ai/ai-provider.interface';
+import type { AiProvider, AiUsage } from '../ai/ai-provider.interface';
 import { PromptBuilderService } from '../ai/prompt-builder.service';
 import { PROMPT_PRESETS } from '../ai/prompts';
 import { parseStructuredAiResponse } from '../ai/structured-response';
@@ -53,9 +53,7 @@ export class PlaygroundService {
     }
 
     let raw = '';
-    let usage:
-      | { promptTokens: number; completionTokens: number; totalTokens: number }
-      | undefined;
+    let usage: AiUsage | undefined;
     try {
       for await (const part of this.ai.streamStructured({
         messages,

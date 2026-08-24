@@ -32,14 +32,14 @@ Lower temperature favors repeatable, extractive answers. Higher values may impro
 
 ## Structured responses
 
-OpenAI receives a strict JSON schema with:
+OpenRouter routes `stealth/ox-alpha` with reasoning enabled and a strict JSON schema containing:
 
 - `answer`
 - `citationChunkIds`
 - `grounded`
 - `confidence`
 
-The complete stream is parsed with Zod. Invalid JSON, missing fields, or invalid enum values fail generation rather than flowing to the client. Angular receives answer deltas and a final validated event.
+The complete stream is parsed with Zod. Invalid JSON, missing fields, or invalid enum values fail generation rather than flowing to the client. Angular receives answer deltas and a final validated event. OpenRouter reasoning details remain server-side; the application exposes only aggregate reasoning-token usage.
 
 ## Citation generation
 

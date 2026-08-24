@@ -1,6 +1,6 @@
 import { BadGatewayException, Inject, Injectable } from '@nestjs/common';
 import { AI_PROVIDER } from '../ai/ai-provider.interface';
-import type { AiProvider } from '../ai/ai-provider.interface';
+import type { AiProvider, AiUsage } from '../ai/ai-provider.interface';
 import { PromptBuilderService } from '../ai/prompt-builder.service';
 import {
   extractPartialAnswer,
@@ -20,11 +20,7 @@ export type ChatStreamEvent =
       citations: Citation[];
       grounded: boolean;
       confidence: 'high' | 'medium' | 'low';
-      usage?: {
-        promptTokens: number;
-        completionTokens: number;
-        totalTokens: number;
-      };
+      usage?: AiUsage;
     };
 
 @Injectable()
@@ -84,9 +80,7 @@ export class ChatService {
     const messages = this.prompts.build(question, chunks);
     let rawJson = '';
     let streamedAnswer = '';
-    let usage:
-      | { promptTokens: number; completionTokens: number; totalTokens: number }
-      | undefined;
+    let usage: AiUsage | undefined;
     try {
       for await (const part of this.ai.streamStructured({
         messages,

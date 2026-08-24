@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AI_PROVIDER } from './ai-provider.interface';
-import { OpenAiProvider } from './openai.provider';
+import { OpenRouterProvider } from './openrouter.provider';
 import { PromptBuilderService } from './prompt-builder.service';
 
 @Module({
   providers: [
-    OpenAiProvider,
-    { provide: AI_PROVIDER, useExisting: OpenAiProvider },
+    OpenRouterProvider,
+    { provide: AI_PROVIDER, useExisting: OpenRouterProvider },
     PromptBuilderService,
   ],
   exports: [AI_PROVIDER, PromptBuilderService],

@@ -160,7 +160,7 @@
           </div>
           <div class="h-80 animate-pulse rounded-2xl bg-stone-200"></div>
         } @else if (result(); as output) {
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div class="metric-card">
               <svg lucideClock size="17"></svg>
               <div>
@@ -183,6 +183,13 @@
               <svg lucideSparkles size="17"></svg>
               <div>
                 <span>Total tokens</span><strong>{{ output.usage?.totalTokens ?? 'n/a' }}</strong>
+              </div>
+            </div>
+            <div class="metric-card">
+              <svg lucideSparkles size="17"></svg>
+              <div>
+                <span>Reasoning tokens</span
+                ><strong>{{ output.usage?.reasoningTokens ?? 'n/a' }}</strong>
               </div>
             </div>
           </div>

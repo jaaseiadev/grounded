@@ -1,7 +1,17 @@
-import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+export interface AiMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface AiUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  reasoningTokens?: number;
+}
 
 export interface AiGenerationOptions {
-  messages: ChatCompletionMessageParam[];
+  messages: AiMessage[];
   temperature: number;
   model?: string;
   signal?: AbortSignal;
@@ -9,11 +19,7 @@ export interface AiGenerationOptions {
 
 export interface AiStreamChunk {
   rawJson: string;
-  usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
+  usage?: AiUsage;
 }
 
 export const AI_PROVIDER = Symbol('AI_PROVIDER');
@@ -22,5 +28,10 @@ export interface AiProvider {
   embed(texts: string[]): Promise<number[][]>;
   streamStructured(options: AiGenerationOptions): AsyncGenerator<AiStreamChunk>;
   generateTitle(question: string): Promise<string>;
-  getModels(): { chat: string; embedding: string };
+  getModels(): {
+    provider: string;
+    chat: string;
+    embedding: string;
+    reasoningEffort: string;
+  };
 }
