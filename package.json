@@ -1,0 +1,26 @@
+{
+  "name": "grounded",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n frontend,backend -c cyan,green \"npm run start --workspace frontend\" \"npm run start:dev --workspace backend\"",
+    "build": "npm run build --workspace backend && npm run build --workspace frontend",
+    "lint": "npm run lint --workspace backend && npm run lint --workspace frontend",
+    "typecheck": "npm run typecheck --workspace backend && npm run typecheck --workspace frontend",
+    "test": "npm run test --workspace backend -- --runInBand && npm run test --workspace frontend -- --watch=false",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prettier": "^3.8.1"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10"
+  }
+}
