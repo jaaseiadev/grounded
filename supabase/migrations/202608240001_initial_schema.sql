@@ -119,12 +119,14 @@ as $$
     chunks.section,
     chunks.metadata,
     chunks.created_at,
-    1 - (chunks.embedding <=> query_embedding) as similarity
+    1 - (
+      chunks.embedding OPERATOR(extensions.<=>) query_embedding
+    ) as similarity
   from public.document_chunks as chunks
   join public.documents as documents on documents.id = chunks.document_id
   where documents.status = 'ready'
     and (filter_document_ids is null or chunks.document_id = any(filter_document_ids))
-  order by chunks.embedding <=> query_embedding
+  order by chunks.embedding OPERATOR(extensions.<=>) query_embedding
   limit least(greatest(match_count, 1), 12);
 $$;
 
